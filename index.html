@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Monitor de Tanques</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <link rel="stylesheet" href="style.css">
+
+
+</head>
+
+<body>
+<nav class="navbar navbar-expand-lg bg-dark navbar-dark shadow-sm sticky-top"> 
+  <div class="container-fluid px-4"> 
+    <a class="navbar-brand fw-bold d-flex align-items-center" href="inicio.html"> Monitoreo de cocción de cerveza </a> 
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal" aria-expanded="false" aria-label="Abrir menú">
+      <span class="navbar-toggler-icon"></span> 
+    </button> 
+    <div class="collapse navbar-collapse" id="menuPrincipal">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0"> 
+        <li class="nav-item"> 
+          <a class="nav-link active" href="#"> Monitoreo </a> </li> 
+        <li class="nav-item"> 
+          <a class="nav-link" href="configuracion.html"> Configuración </a>
+        </li> 
+        <li class="nav-item"> 
+          <a class="nav-link" href="historicos.html"> Produción histórica </a>
+        </li> 
+      </ul> 
+      <div class="dropdown">
+        <button class="btn btn-dark position-relative border-0" type="button" id="botonNotificaciones" data-bs-toggle="dropdown" aria-expanded="false">
+          <span style="font-size: 1.4rem;">🔔</span>
+          <span id="contadorNotificaciones" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"> 3 </span>
+        </button> 
+        <ul class="dropdown-menu dropdown-menu-end shadow" style="width: 350px;" aria-labelledby="botonNotificaciones">
+          <li class="px-3 py-2 border-bottom"> 
+            <strong>Notificaciones</strong> 
+          </li> 
+          <li> <a class="dropdown-item py-3" href="#"> <div class="d-flex"> <span class="me-2">🔴</span> <div> <strong>Temperatura elevada</strong> <div class="small text-muted"> Tanque de cocción: 100 °C </div> <div class="small text-muted"> Hace 2 minutos </div> </div> </div> </a> </li> <li> <a class="dropdown-item py-3" href="#"> <div class="d-flex"> <span class="me-2">🟡</span> <div> <strong>Nivel bajo</strong> <div class="small text-muted"> Tanque de cocción: 20% </div> <div class="small text-muted"> Hace 8 minutos </div> </div> </div> </a> </li> <li> <a class="dropdown-item py-3" href="#"> <div class="d-flex"> <span class="me-2">🟢</span> <div> <strong>Flujo restablecido</strong> <div class="small text-muted"> Válvula V1 abierta </div> <div class="small text-muted"> Hace 15 minutos </div> </div> </div> </a> </li> <li class="border-top text-center"> <a class="dropdown-item text-primary py-2" href="#incidentes"> Ver todas las notificaciones </a> </li> </ul> </div> </div> </div> </nav>
+
+
+
+
+<div class="grafico-overlay" id="graficoOverlay"
+     onclick="cerrarGraficoTemperatura()">
+</div>
+
+<div class="grafico-flotante" id="graficoFlotante">
+
+    <div class="grafico-header">
+        <h5 class="fw-bold mb-0" id="tituloGrafico">
+            Sensores de temperatura
+        </h5>
+
+        <button class="cerrar-grafico"
+                onclick="cerrarGraficoTemperatura()">
+            &times;
+        </button>
+    </div>
+
+    <div class="d-flex justify-content-end mb-3">
+        <select onchange="updateGraficoTemperatura()" class="form-select form-select-sm w-auto" id="rangoTiempoT">
+            <option value="15">Últimos 15 min</option>
+            <option value="30" selected>Últimos 30 min</option>
+            <option value="60">Última 1 hora</option>
+            <option value="180">Últimas 3 horas</option>
+        </select>
+    </div>
+
+    <div style="position: relative; height: 350px;">
+        <canvas id="grafico"></canvas>
+    </div>
+</div>
+
+<div class="container-fluid py-4">
+  <div class="card tank-card p-3">
+     <div class="card bg-light border-0 p-3">
+      <div class="p-4 rounded-3 mb-4" style="background: #eff6ff; border-left: 5px solid #2563eb;">
+
+          <div class="text-primary small fw-semibold text-uppercase mb-2">
+            Etapa actual
+          </div>
+
+          <h3 class="fw-bold mb-2" id="processStage">
+            Hervido de agua
+          </h3>
+
+          <div class="d-flex align-items-center gap-2">
+            <span class="fs-4" aria-hidden="true"></span>
+            <div>
+              <div class="text-muted small">Acción en curso</div>
+              <div class="fw-semibold" id="processAction">
+                Calentando el agua
+              </div>
+            </div>
+          </div>
+        </div>
+
+<!-- Progreso de las etapas -->
+<div class="mb-3">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="fw-semibold">Etapas del proceso</span>
+    <span class="small text-muted">Etapa 1 de 7</span>
+  </div>
+
+  <div class="d-flex align-items-start">
+
+    <!-- Etapa 1: Calentar agua -->
+    <div class="text-center flex-fill">
+      <div class="rounded-circle text-white d-flex align-items-center
+                  justify-content-center mx-auto mb-2"
+           style="width: 36px; height: 36px; background: #2563eb;">
+        1
+      </div>
+      <div class="small fw-bold text-primary">Calentar agua</div>
+      <div class="text-primary" style="font-size: 12px;">En curso</div>
+    </div>
+
+    <div class="flex-fill mt-3"
+         style="height: 3px; background: #dee2e6;"></div>
+
+    <!-- Etapa 2: Llenar mosto -->
+    <div class="text-center flex-fill">
+      <div class="rounded-circle bg-secondary-subtle text-secondary
+                  d-flex align-items-center justify-content-center
+                  mx-auto mb-2"
+           style="width: 36px; height: 36px;">2</div>
+      <div class="small fw-semibold">Llenar tanque</div>
+      <div class="text-muted" style="font-size: 12px;">Pendiente</div>
+    </div>
+
+    <div class="flex-fill mt-3"
+         style="height: 3px; background: #dee2e6;"></div>
+
+    <!-- Etapa 3: Maceración -->
+    <div class="text-center flex-fill">
+      <div class="rounded-circle bg-secondary-subtle text-secondary
+                  d-flex align-items-center justify-content-center
+                  mx-auto mb-2"
+           style="width: 36px; height: 36px;">3</div>
+      <div class="small fw-semibold">Maceración</div>
+      <div class="text-muted" style="font-size: 12px;">Pendiente</div>
+    </div>
+
+    <div class="flex-fill mt-3"
+         style="height: 3px; background: #dee2e6;"></div>
+
+    <!-- Etapa 4: Transferir mosto -->
+    <div class="text-center flex-fill">
+      <div class="rounded-circle bg-secondary-subtle text-secondary
+                  d-flex align-items-center justify-content-center
+                  mx-auto mb-2"
+           style="width: 36px; height: 36px;">4</div>
+      <div class="small fw-semibold">Transferir</div>
+      <div class="text-muted" style="font-size: 12px;">Pendiente</div>
+    </div>
+
+    <div class="flex-fill mt-3"
+         style="height: 3px; background: #dee2e6;"></div>
+
+    <!-- Etapa 5: Agregar agua -->
+    <div class="text-center flex-fill">
+      <div class="rounded-circle bg-secondary-subtle text-secondary
+                  d-flex align-items-center justify-content-center
+                  mx-auto mb-2"
+           style="width: 36px; height: 36px;">5</div>
+      <div class="small fw-semibold">Agregar agua</div>
+      <div class="text-muted" style="font-size: 12px;">Pendiente</div>
+    </div>
+
+    <div class="flex-fill mt-3"
+         style="height: 3px; background: #dee2e6;"></div>
+
+    <!-- Etapa 6: Recuperar mosto -->
+    <div class="text-center flex-fill">
+      <div class="rounded-circle bg-secondary-subtle text-secondary
+                  d-flex align-items-center justify-content-center
+                  mx-auto mb-2"
+           style="width: 36px; height: 36px;">6</div>
+      <div class="small fw-semibold">Recuperar mosto</div>
+      <div class="text-muted" style="font-size: 12px;">Pendiente</div>
+    </div>
+
+    <div class="flex-fill mt-3"
+         style="height: 3px; background: #dee2e6;"></div>
+
+    <!-- Etapa 7: Cocción -->
+    <div class="text-center flex-fill">
+      <div class="rounded-circle bg-secondary-subtle text-secondary
+                  d-flex align-items-center justify-content-center
+                  mx-auto mb-2"
+           style="width: 36px; height: 36px;">7</div>
+      <div class="small fw-semibold">Cocción</div>
+      <div class="text-muted" style="font-size: 12px;">Pendiente</div>
+    </div>
+
+  </div>
+</div>
+
+        <br><br><br>
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-4 border-end">
+        
+            <div class="d-flex justify-content-between">
+                <strong>Tanque de agua</strong><span class="badge text-bg-success">NORMAL</span>
+            </div>
+            <div class="tank my-3">
+            <div class="tank-label"></div>
+            <div class="liquid" id="liquid1"></div>
+            <div class="level-label" id="level1">65%</div>
+            <div class="sensor" title="Sensor de temperatura"></div>
+            </div>
+            <div class="row text-center">
+                <div class="col"  onclick="mostrarGraficoTemperatura(0)"><small class="text-muted">Temperatura</small><div class="fs-4 fw-bold" id="temp1" style="color: green;">60 °C</div></div>
+                <div class="col" ><small class="text-muted">Nivel</small><div class="fs-4 fw-bold" id="levelText1">65%</div></div>
+            </div>
+        
+        </div>
+
+        <div class="col-12 col-md-4 border-end">
+        
+            <div class="d-flex justify-content-between">
+                <strong>Tanque de mosto</strong><span class="badge text-bg-success">NORMAL</span>
+            </div>
+            <div class="tank my-3">
+            <div class="tank-label"></div>
+            <div class="liquid" id="liquid2"></div>
+            <div class="level-label" id="level2">0%</div>
+            <div class="sensor"></div>
+            </div>
+            <div class="row text-center">
+                <div class="col"  onclick="mostrarGraficoTemperatura(1)"><small class="text-muted">Temperatura</small><div class="fs-4 fw-bold" id="temp2" style="color:sandybrown;">26.1 °C</div></div>
+                <div class="col"><small class="text-muted">Nivel</small><div class="fs-4 fw-bold" id="levelText2">0%</div></div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+        
+            <div class="d-flex justify-content-between">
+                <strong>Tanque de cocción</strong><span class="badge text-bg-danger">PELIGRO</span>
+            </div>
+            <div class="tank my-3">
+            <div class="tank-label"></div>
+            <div class="liquid" id="liquid3"></div>
+            <div class="level-label" id="level3">0%</div>
+            <div class="sensor"></div>
+            </div>
+            <div class="row text-center">
+            <div class="col"  onclick="mostrarGraficoTemperatura(2)"><small class="text-muted">Temperatura</small><div class="fs-4 fw-bold" id="temp3" style="color:red">100 °C</div></div>
+            <div class="col"><small class="text-muted">Nivel</small><div class="fs-4 fw-bold" id="levelText3">0%</div></div>
+            </div>
+        </div>
+        </div>
+
+        <div class="row align-items-center justify-content-center text-center g-2">
+
+            <div class="col-lg-3">
+                <div class="pipe"></div>
+            </div>
+
+            <div class="col-lg-1"  onclick="mostrarGraficoFlujo(0)">
+                <div class="small text-muted mb-1" id="v1L">10 l/s</div>
+                <div class="valve-container valve open" id="v4">
+                    <div class="valve-body">
+                        <div class="valve-left"></div>
+                        <div class="valve-line"></div>
+                        <div class="valve-right"></div>
+                    </div>
+                </div>
+                <div class="small mt-1" id="v1status">ABIERTA</div>
+            </div>
+
+            <div class="col-lg-3">
+                <div class="pipe"></div>
+            </div>
+
+            <div class="col-lg-1" onclick="mostrarGraficoFlujo(1)" >
+                <div class="small text-muted mb-1" >0 l/s</div>
+                <div class="valve-container valve closed" id="v4">
+                    <div class="valve-body">
+                        <div class="valve-left"></div>
+                        <div class="valve-line"></div>
+                        <div class="valve-right"></div>
+                    </div>
+                </div>
+                <div class="small mt-1" id="v2status">CERRADA</div>
+            </div>
+
+            <div class="col-lg-3">
+                <div class="pipe"></div>
+            </div>
+
+        </div>
+  </div>
+  <br>
+
+  <!-- Producción de cerveza -->
+  <div class="card tank-card p-4 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold mb-0">Producción de cerveza</h5>
+      <span class="badge text-bg-success">EN PROCESO</span>
+    </div>
+    <div class="row g-3 text-center">
+      <div class="col-6 col-md-3">
+        <small class="text-muted">Lote actual</small>
+        <div class="fs-4 fw-bold" id="loteActual">#0245</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <small class="text-muted">Producido hoy</small>
+        <div class="fs-4 fw-bold text-primary" id="litrosHoy">1.240 L</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <small class="text-muted">Meta diaria</small>
+        <div class="fs-4 fw-bold" id="metaDiaria">2.000 L</div>
+      </div>
+      <div class="col-6 col-md-3">
+        <small class="text-muted">Rendimiento</small>
+        <div class="fs-4 fw-bold text-success" id="rendimiento">92%</div>
+      </div>
+    </div>
+    <div class="progress mt-3" style="height: 22px;">
+      <div class="progress-bar bg-success" id="barraProduccion" role="progressbar" style="width: 62%;">62%</div>
+    </div>
+    <div class="small text-muted mt-2">Tiempo estimado para completar el lote: <strong id="tiempoRestante">1h 45min</strong></div>
+  </div>
+
+
+
+  <!-- Histórico de incidentes -->
+  <div class="card tank-card p-4 mt-4" id="incidentes">
+    <h5 class="fw-bold mb-3">Histórico de incidentes</h5>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Tanque</th>
+            <th>Incidente</th>
+            <th>Severidad</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tablaIncidentes">
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

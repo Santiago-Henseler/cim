@@ -1,0 +1,168 @@
+  body { background:#f4f6f9; }
+    .tank-card { border:0; border-radius:16px; box-shadow:0 4px 18px rgba(0,0,0,.08); }
+    .tank {
+      position:relative; width:170px; height:260px; margin:auto;
+      border:5px solid #6c757d; border-radius:22px 22px 30px 30px;
+      overflow:hidden; background:#e9ecef;
+    }
+    .liquid {
+      position:absolute; left:0; bottom:0; width:100%; height:65%;
+      background:linear-gradient(#45b7e8,#168ac2);
+      transition:height .5s ease;
+    }
+    .liquid::after {
+      content:""; position:absolute; top:0; left:-20%; width:140%; height:12px;
+      background:rgba(255,255,255,.3); border-radius:50%;
+    }
+    .tank-label {
+      position:absolute; z-index:2; top:15px; left:0; right:0;
+      text-align:center; font-weight:700; color:#343a40;
+    }
+    .level-label {
+      position:absolute; z-index:2; bottom:15px; left:0; right:0;
+      text-align:center; font-size:1.2rem; font-weight:700; color:white;
+      text-shadow:0 1px 3px rgba(0,0,0,.5);
+    }
+    .sensor {
+      position:absolute; right:-42px; top:55px; width:38px; height:100px;
+      border:3px solid #343a40; border-radius:8px; background:#fff;
+    }
+    .sensor::before { content:""; position:absolute; width:12px; height:12px; border-radius:50%;
+      background:#dc3545; top:8px; left:10px; }
+    .sensor::after { content:""; position:absolute; width:4px; height:60px;
+      background:#dc3545; top:27px; left:14px; }
+    .pipe { height:10px; background:#6c757d; border-radius:8px; position:relative; }
+    .valve {
+      width:58px; height:58px; border-radius:50%; border:6px solid #495057;
+      background:#fff; display:flex; align-items:center; justify-content:center;
+      margin:auto; font-weight:700; cursor:pointer; user-select:none;
+    }
+    .valve.open { background:#d1e7dd; border-color:#9ea7a0; color:#9ea7a0; }
+    .valve.closed { background:#f8d7da; border-color:#614e50; color:#614e50; }
+    .flow { height:6px; background:#0d6efd; border-radius:5px; }
+    .status-dot { width:11px; height:11px; display:inline-block; border-radius:50%; }
+    .online { background:#9ea7a0; }
+    .warning { background:#ffc107; }
+    .alarm { background:#614e50; }
+    @media (max-width: 991px) {
+      .process-row { gap:18px; }
+      .connector { transform:rotate(90deg); margin:15px 0; }
+    }
+
+#liquid2, #liquid3{
+  background:linear-gradient(#E9967A,#804000);
+}
+
+#barraProduccion {
+  font-weight: 700;
+  transition: width .6s ease;
+}
+
+#tablaIncidentes td {
+  vertical-align: middle;
+}
+
+.grafico-flotante {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 750px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  padding: 20px;
+}
+.grafico-overlay {
+  display: none;
+  position: fixed;
+  z-index: 9998;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+.grafico-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.cerrar-grafico {
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  color: #555;
+}
+.cerrar-grafico:hover {
+  color: red;
+}
+.temperatura-click {
+  cursor: pointer;
+}
+.temperatura-click:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+}
+
+  .valve-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+  }
+  /* Actuador */
+  .valve-actuator {
+      width: 28px;
+      height: 18px;
+      border: 3px solid #333;
+      border-radius: 4px;
+      background: #ddd;
+      margin-bottom: 3px;
+  }
+  /* Vástago */
+  .valve-stem {
+      width: 4px;
+      height: 15px;
+      background: #333;
+  }
+  /* Cuerpo de la válvula */
+  .valve-body {
+      display: flex;
+      align-items: center;
+      height: 35px;
+  }
+  .valve-left,
+  .valve-right {
+      width: 0;
+      height: 0;
+      border-top: 16px solid transparent;
+      border-bottom: 16px solid transparent;
+  }
+  .valve-left {
+      border-right: 22px solid #9ea7a0;
+  }
+  .valve-right {
+      border-left: 22px solid #9ea7a0;
+  }
+  /* Estado cerrada */
+  .valve.closed .valve-left {
+      border-right-color: #614e50;
+  }
+  .valve.closed .valve-right {
+      border-left-color: #614e50;
+  }
+  /* Línea central */
+  .valve-line {
+      width: 10px;
+      height: 4px;
+      background: #333;
+  }
+  .valve-label {
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 3px;
+  }
